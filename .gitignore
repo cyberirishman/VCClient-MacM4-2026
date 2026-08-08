@@ -1,0 +1,23 @@
+# --- Python / uv venv ---
+.venv/
+__pycache__/
+*.pyc
+
+# --- Upstream RVC checkout (cloned by setup.sh; do NOT commit, it is large) ---
+RVC-WebUI-MacOS/
+
+# --- Trained models, indexes, logs, audio (yours / large / private) ---
+*.pth
+*.index
+*.onnx
+logs/
+weights/
+assets/
+training_audio/*
+!training_audio/.gitkeep
+*.wav
+*.flac
+*.mp3
+
+# --- OS cruft ---
+.DS_Store

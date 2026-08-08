@@ -1,0 +1,7 @@
+# Extra pins layered on top of upstream RVC-WebUI-MacOS/requirements.txt.
+# Installed by setup.sh AFTER the upstream requirements.
+# PyTorch 2.2.2 ships arm64 wheels with Metal (MPS) support for Apple Silicon.
+torch==2.2.2
+torchaudio==2.2.2
+# Live mic/speaker I/O for the real-time GUI.
+sounddevice==0.4.6
