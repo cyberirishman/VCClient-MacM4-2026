@@ -6,6 +6,7 @@ cd "$ROOT"
 [ -d .venv ] || { echo "No .venv — run ./setup.sh first."; exit 1; }
 # shellcheck disable=SC1091
 source .venv/bin/activate
+export KMP_DUPLICATE_LIB_OK=TRUE   # avoid faiss/torch OpenMP double-init segfault on macOS
 cd RVC-WebUI-MacOS
 # Entry point is the *.py file with 'gui' in its name (e.g. gui_v1.py).
 ENTRY="$(ls *.py 2>/dev/null | grep -iE 'gui' | head -1)"

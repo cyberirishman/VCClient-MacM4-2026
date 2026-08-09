@@ -6,6 +6,8 @@ cd "$ROOT"
 [ -d .venv ] || { echo "No .venv — run ./setup.sh first."; exit 1; }
 # shellcheck disable=SC1091
 source .venv/bin/activate
+export KMP_DUPLICATE_LIB_OK=TRUE   # avoid faiss/torch OpenMP double-init segfault on macOS
+export OMP_NUM_THREADS=1            # further reduce faiss OpenMP segfault risk in-UI
 cd RVC-WebUI-MacOS
 # Entry point is the *.py file with 'web' in its name (e.g. infer-web.py).
 ENTRY="$(ls *.py 2>/dev/null | grep -iE 'infer-web|^web|webui' | head -1)"

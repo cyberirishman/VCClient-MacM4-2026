@@ -13,8 +13,7 @@ RVC-WebUI-MacOS/
 logs/
 weights/
 assets/
-training_audio/*
-!training_audio/.gitkeep
+training_audio/
 *.wav
 *.flac
 *.mp3

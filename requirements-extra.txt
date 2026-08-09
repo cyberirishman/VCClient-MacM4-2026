@@ -5,3 +5,19 @@ torch==2.2.2
 torchaudio==2.2.2
 # Live mic/speaker I/O for the real-time GUI.
 sounddevice==0.4.6
+# Build backend — provides pkg_resources, required by librosa 0.9.1 at import.
+# Pinned <70 because newer setuptools removes pkg_resources.
+setuptools<70
+wheel
+# Real-time GUI toolkit used by gui_v1.py (open-source fork of PySimpleGUI).
+# Not pulled in by upstream requirements.txt. locked-requirements.txt will
+# capture the exact version after a successful run.
+FreeSimpleGUI
+# Match gradio 3.34.0 exactly. Upstream pins gradio but NOT gradio_client, so the
+# resolver otherwise pulls a newer client that removed `media_data` -> ImportError.
+gradio==3.34.0
+gradio_client==0.2.7
+# Pin matplotlib < 3.10: RVC's training summary calls fig.canvas.tostring_rgb(),
+# which matplotlib 3.10 REMOVED -> AttributeError crash at epoch 1. Upstream only
+# loosely constrained it, so a too-new version drifted in.
+matplotlib==3.7.5

@@ -12,6 +12,7 @@ UPSTREAM="https://github.com/qingbo1011/RVC-WebUI-MacOS.git"
 UPSTREAM_DIR="RVC-WebUI-MacOS"
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 cd "$ROOT"
+mkdir -p training_audio   # drop your target-voice clips here (WAV/MP3/FLAC)
 
 say()  { printf "\n\033[1;36m==> %s\033[0m\n" "$*"; }
 warn() { printf "\n\033[1;33m[!] %s\033[0m\n" "$*"; }
@@ -56,6 +57,13 @@ fi
 source .venv/bin/activate
 python --version | grep -q " 3.10" || die "venv is not Python 3.10. Delete .venv and re-run."
 
+# --- 3b. Build backends: setuptools provides pkg_resources (librosa needs it) ---
+# uv venvs ship bare; without this, `import librosa` fails with:
+#   ModuleNotFoundError: No module named 'pkg_resources'
+# Pin <70 because newer setuptools is removing pkg_resources.
+say "Installing build backends (setuptools<70, wheel)"
+uv pip install "setuptools<70" wheel
+
 # --- 4. Clone upstream RVC (Apple-Silicon fork) ------------------------------
 say "Fetching upstream RVC ($UPSTREAM_DIR)"
 if [ ! -d "$UPSTREAM_DIR/.git" ]; then
@@ -64,6 +72,46 @@ else
   say "Upstream already present; pulling latest"
   git -C "$UPSTREAM_DIR" pull --ff-only || warn "Could not fast-forward upstream; leaving as-is."
 fi
+
+# --- 4b. Force English UI (the fork hardcodes zh_CN in i18n/i18n.py) ---
+say "Setting RVC UI language to English"
+python3 - "$UPSTREAM_DIR/i18n/i18n.py" <<'PYEOF'
+import io,sys
+p=sys.argv[1]; s=io.open(p,encoding="utf-8").read()
+if 'language = "zh_CN"' in s:
+    io.open(p,"w",encoding="utf-8").write(s.replace('language = "zh_CN"','language = "en_US"'))
+    print("  UI language -> en_US")
+else:
+    print("  UI language already patched")
+PYEOF
+
+# --- 4c. Patch macOS SOLA bug in real-time GUI (torch.max needs dim=0) ---
+say "Patching real-time GUI SOLA line for macOS"
+python3 - "$UPSTREAM_DIR/gui_v1.py" <<'PYEOF'
+import io,sys
+p=sys.argv[1]; s=io.open(p,encoding="utf-8").read()
+old="_, sola_offset = torch.max(cor_nom[0, 0] / cor_den[0, 0])"
+new="_, sola_offset = torch.max(cor_nom[0, 0] / cor_den[0, 0], dim=0)"
+if old in s:
+    io.open(p,"w",encoding="utf-8").write(s.replace(old,new,1)); print("  SOLA line patched (dim=0)")
+else:
+    print("  SOLA line already patched or not found")
+PYEOF
+
+# --- 4d. Faiss threading fix in real-time module (cap ONLY faiss, keep torch fast) ---
+say "Patching rvc_for_realtime.py to cap only faiss threads"
+python3 - "$UPSTREAM_DIR/tools/rvc_for_realtime.py" <<'PYEOF'
+import io,sys
+p=sys.argv[1]; s=io.open(p,encoding="utf-8").read()
+old="import faiss\nimport numpy as np"
+new="import faiss\nfaiss.omp_set_num_threads(1)  # cap ONLY faiss threads (OpenMP-safe); torch keeps all cores\nimport numpy as np"
+if "faiss.omp_set_num_threads(1)" in s:
+    print("  already patched")
+elif old in s:
+    io.open(p,"w",encoding="utf-8").write(s.replace(old,new,1)); print("  faiss thread cap added")
+else:
+    print("  anchor not found - check manually")
+PYEOF
 
 # --- 5. PyTorch (MPS) first, then app deps ----------------------------------
 say "Installing PyTorch (Metal/MPS): $TORCH_PIN"
