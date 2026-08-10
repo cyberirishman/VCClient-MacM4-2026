@@ -1,6 +1,6 @@
 # Convenience wrappers. Run `make setup` first, then `make webui` to train,
 # then `make realtime` for the live voice changer.
-.PHONY: setup webui realtime lock clean
+.PHONY: setup webui realtime lock clean uninstall purge
 
 setup:
 	./setup.sh
@@ -17,3 +17,9 @@ lock:
 clean:
 	rm -rf .venv
 	@echo "Removed .venv. Upstream checkout + models under RVC-WebUI-MacOS/ left intact."
+
+uninstall:
+	./cleanup.sh
+
+purge:
+	./cleanup.sh --all

@@ -289,6 +289,24 @@ Now the converted voice feeds the virtual mic (for the call) and your headphones
 After a successful install, `locked-requirements.txt` captures exact versions.
 Restore anytime: `uv pip install -r locked-requirements.txt`.
 
+## Cleanup / uninstall
+
+Done experimenting? `cleanup.sh` reclaims the disk space (the base models + venv
+are several GB) or removes the project entirely:
+
+```bash
+./cleanup.sh          # RESET: delete .venv + RVC-WebUI-MacOS/ (base models,
+                      #        trained voices, caches) but KEEP the repo, so you
+                      #        can re-run ./setup.sh later
+./cleanup.sh --all    # FULL:  delete the entire project folder, source and all
+./cleanup.sh -h       # help
+```
+
+It lists what it will delete and asks you to type `yes` first (add `-y` to skip the
+prompt). It does **not** touch Homebrew packages, `uv`, or the uv-managed Python
+3.10 — those may be shared with other projects — but it prints the manual commands
+to remove those too if you want a clean sweep.
+
 ## Troubleshooting
 
 | Symptom | Fix |
