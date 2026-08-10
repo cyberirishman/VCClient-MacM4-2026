@@ -234,15 +234,17 @@ different one — it must match the name you used in Stage 1.
 > on Apple Silicon (faiss + OpenMP). `./build-index.sh` does the same job
 > single-threaded and safely.
 
-It prints the path to the `added_*.index` file it creates under
-`RVC-WebUI-MacOS/logs/<name>/` — that's the one you load in Stage 3.
+When it finishes it prints **both paths you need for Stage 3** — the model `.pth`
+and the `.index` — ready to paste straight into the GUI's two fields.
 
 ## Stage 3 — Run it live (real-time voice change)
 
 Now use your trained model. Run `./run-realtime.sh`, then in the GUI:
 
-- **Load both** `voicefile.pth` **and** its `added_*.index` — the GUI requires an
-  index file selected, or it pops up *"please select an index file"* and won't start.
+- **Load both** `voicefile.pth` **and** its `added_*.index` by **pasting each full
+  path directly into its text field** — do **NOT** click the *Select the .pth file* /
+  *Select the .index file* browse buttons. Both fields must be filled or the GUI
+  won't start (it pops up *"please select an index file"*).
 - **Index rate: leave at `0`** on Apple Silicon — this keeps the index loaded but
   inactive (active retrieval deadlocks real-time; see the limitation note). The
   model alone is already a convincing clone.

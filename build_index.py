@@ -43,8 +43,18 @@ def main():
         index.add(big[i:i + 8192])
     added = os.path.join(exp_dir, f"added_IVF{n_ivf}_Flat_nprobe_1_{exp}_v2.index")
     faiss.write_index(index, added)
-    print("\nDONE. Load THIS .index in the real-time GUI:")
-    print("  " + added)
+    pth_path = os.path.join(root, "RVC-WebUI-MacOS", "assets", "weights", exp + ".pth")
+    print("\n" + "=" * 72)
+    print("DONE.  Use the following TWO paths in the real-time GUI.")
+    print("Paste each directly into its text field - do NOT click the Select buttons.")
+    print("=" * 72)
+    print("\n  In the .pth field, paste this path:")
+    print("    " + pth_path)
+    if not os.path.exists(pth_path):
+        print("    [!] .pth not found - check the model name / that training finished.")
+    print("\n  In the .index field, paste this path:")
+    print("    " + added)
+    print("")
 
 
 if __name__ == "__main__":
