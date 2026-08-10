@@ -33,17 +33,22 @@ cd VCClient-MacM4-2026
 `./setup.sh` installs everything — dependencies, the Python 3.10 venv, and the
 base models — in one pass (~15–20 minutes).
 
-Then, **first train a voice** — launch the web UI:
+This voice changer needs two types of voice files     
+The voice model file (.pth) and  and the index (.index file)    
+You can find these on sites such as Github and go straight to Step 3, or train your own voice models  
+
+**To train a voice** — launch the web UI - the training interface is launched in a browser:  
 
 ```bash
 ./run-webui.sh
 ```
 
-Opens the training web UI at <http://127.0.0.1:7865> (Train tab). Use it to train
-your voice model (**Stage 1** below), then build its index (**Stage 2**). It takes
+Open the training web UI in a browser at <http://127.0.0.1:7865> (Train tab). Use it to train
+your voice model (.pkt file **Stage 1** below), then build its index (.index file **Stage 2**). It takes
 ~60 seconds to start — open the URL in a browser yourself once it's up.
 
-**Only after** you have a trained model **and** its index, go live:
+**Only after** you have a trained model   **and** its index (or downloaded them),   
+go live with the integrated control panel :
 
 ```bash
 ./run-realtime.sh
