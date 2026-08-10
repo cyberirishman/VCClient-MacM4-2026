@@ -239,6 +239,14 @@ and the `.index` — ready to paste straight into the GUI's two fields.
 
 ## Stage 3 — Run it live (real-time voice change)
 
+> ⚠️ **First-time only — grant your terminal microphone access, or you'll get
+> total silence.** macOS blocks mic access per app. If your terminal (Terminal or
+> iTerm2) isn't allowed, RVC receives **silence** and you'll hear nothing even
+> though it looks like it's converting. Open **System Settings → Privacy & Security
+> → Microphone**, enable your terminal app, then **fully quit it (Cmd+Q) and
+> reopen** before running `./run-realtime.sh`. (The System Settings mic meter can
+> move while your terminal still has no access — they're separate permissions.)
+
 Now use your trained model. Run `./run-realtime.sh`, then in the GUI:
 
 - **Load both** `voicefile.pth` **and** its `added_*.index` by **pasting each full
@@ -374,6 +382,7 @@ to remove those too if you want a clean sweep.
 | Clone sounds mushy | Use a cleaner training sample and train more epochs. (Don't raise Index Rate on Apple Silicon — it deadlocks; keep it at 0.) |
 | Delay too long | Lower Block time/crossfade; use a `40k` model. |
 | No sound in Zoom | Zoom mic = BlackHole 2ch; GUI output = BlackHole 2ch. |
+| Real-time runs but **no sound at all** (even Input-monitor mode) | Grant your terminal app mic access: System Settings → Privacy & Security → Microphone → enable Terminal/iTerm, then **Cmd+Q and reopen**. macOS feeds the process silence otherwise. |
 | `No module named 'pkg_resources'` | `uv pip install "setuptools<70" wheel` (now baked into setup.sh). |
 | `No module named 'FreeSimpleGUI'` | `uv pip install FreeSimpleGUI` (now in requirements-extra.txt). |
 | GUI opens in Chinese | Fork hardcodes zh_CN; setup.sh now sets `i18n/i18n.py` to `en_US`. |
