@@ -193,8 +193,11 @@ for the completion message before moving on:
    **`all-feature-done`**.
 3. Set **Save frequency = 25** and **Total training epochs = 200**, then click
    <kbd>Train model</kbd>. This is the long one — **hours** on an M4 (~100 s/epoch, so
-   roughly 4–5.5 h for 200 epochs). It is done when the log reports training
-   finished (`saving final ckpt: Success`).
+   roughly 4–5.5 h for 200 epochs). **Two signs it finished (either confirms success):** the **Output information**
+   box on the web page shows `训练结束, 您可查看控制台训练日志或实验文件夹下的train.log`
+   — hardcoded Chinese for *"Training finished; check the console training log or
+   the train.log in the experiment folder"* — **and** the terminal/console prints
+   `saving final ckpt: Success`.
 
 > ⚠️ **Do NOT click the UI's "Train feature index" button** — it segfaults on Apple
 > Silicon. Building the index is **Stage 2**, done separately with `./build-index.sh`
