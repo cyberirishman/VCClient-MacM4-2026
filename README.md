@@ -187,12 +187,12 @@ prints `Running on local URL: http://0.0.0.0:7865`, open a browser **yourself** 
 The **Output information** box (right side of the Train tab) shows progress; wait
 for the completion message before moving on:
 
-1. Click **Process data**. Wait until Output information shows the success /
+1. Click <kbd>Process data</kbd>. Wait until Output information shows the success /
    `end preprocess` message.
-2. Click **Feature extraction**. Wait until Output information shows
+2. Click <kbd>Feature extraction</kbd>. Wait until Output information shows
    **`all-feature-done`**.
 3. Set **Save frequency = 25** and **Total training epochs = 200**, then click
-   **Train model**. This is the long one — **hours** on an M4 (~100 s/epoch, so
+   <kbd>Train model</kbd>. This is the long one — **hours** on an M4 (~100 s/epoch, so
    roughly 4–5.5 h for 200 epochs). It is done when the log reports training
    finished (`saving final ckpt: Success`).
 
