@@ -113,6 +113,17 @@ else:
     print("  anchor not found - check manually")
 PYEOF
 
+# --- 4e. Fix malformed FileBrowse file_types in the real-time GUI ---
+say "Patching gui_v1.py file-browse dialogs"
+python3 - "$UPSTREAM_DIR/gui_v1.py" <<'PYEOF'
+import io,sys
+p=sys.argv[1]; s=io.open(p,encoding="utf-8").read()
+s=s.replace('file_types=((". pth"),),','file_types=(("PTH files", "*.pth"),),')
+s=s.replace('file_types=((". index"),),','file_types=(("Index files", "*.index"),),')
+io.open(p,"w",encoding="utf-8").write(s)
+print("  file-browse file_types fixed")
+PYEOF
+
 # --- 5. PyTorch (MPS) first, then app deps ----------------------------------
 say "Installing PyTorch (Metal/MPS): $TORCH_PIN"
 uv pip install $TORCH_PIN

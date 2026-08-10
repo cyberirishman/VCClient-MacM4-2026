@@ -380,6 +380,7 @@ to remove those too if you want a clean sweep.
 | Training dies at epoch 1: `no attribute 'tostring_rgb'` | `uv pip install "matplotlib==3.7.5"` (pinned in requirements-extra.txt). |
 | `Segmentation fault: 11` on Train feature index | faiss/OpenMP crashes in the web UI on Apple Silicon. Use `./build-index.sh` instead — single-threaded, no web UI. |
 | Real-time: `iteration over a 0-d tensor` (SOLA) | macOS bug in gui_v1.py — `torch.max(...)` needs `dim=0`. Fixed by setup.sh step 4c. |
+| GUI file-browse button errors `too many values to unpack` | Malformed `file_types` in gui_v1.py; fixed by setup.sh step 4e. Workaround: paste the full path into the field instead of using the browse button. |
 | `Index search FAILED or disabled` | **Expected** on Apple Silicon — you keep Index Rate at 0, so the index is loaded but not searched. Not an error. (Raising the rate to actually use it deadlocks real-time.) |
 
 ## Responsible use
