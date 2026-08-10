@@ -58,7 +58,7 @@ reproducible record.
 ---
 
 ## 7. VERIFIED RUN — success (2026-08-08 02:59 UTC)
-Host: Andrew-M4s-Mac-mini (Mac Mini M4, 64 GB), macOS, arm64.
+Host: Mac Mini M4 (64 GB), macOS, arm64.
 `./setup.sh` completed cleanly:
 
 ```
@@ -172,7 +172,7 @@ blackhole-2ch` -> set app mic to BlackHole, + Multi-Output Device for self-monit
 ---
 
 ## 17. Fix — faiss index build segfaults in web UI (2026-08-08 13:41 UTC)
-Training completed (200 epochs; assets/weights/elon_test.pth written). But the
+Training completed (200 epochs; assets/weights/voicefile.pth written). But the
 web UI's "Train feature index" segfaults on Apple Silicon (`Segmentation fault:
 11`) even with no training running — faiss's OpenMP conflicts with the process's
 threading. KMP_DUPLICATE_LIB_OK alone did not prevent it. Solution: added a
@@ -185,8 +185,8 @@ logs/<exp>/). Also added OMP_NUM_THREADS=1 to run-webui.sh as a fallback.
 
 ## 18. Index built + real-time ready (2026-08-09 17:11 UTC)
 Feature index built via ./build-index.sh (single-threaded, no web UI): 9944
-vectors, n_ivf=254 -> added_IVF254_Flat_nprobe_1_elon_test_v2.index (31.4 MB).
-Both artifacts confirmed: assets/weights/elon_test.pth (57.5 MB) + the .index.
+vectors, n_ivf=254 -> added_IVF254_Flat_nprobe_1_voicefile_v2.index (31.4 MB).
+Both artifacts confirmed: assets/weights/voicefile.pth (57.5 MB) + the .index.
 Added OMP_NUM_THREADS=1 to run-realtime.sh (faiss retrieval runs there too).
 Ready for ./run-realtime.sh.
 

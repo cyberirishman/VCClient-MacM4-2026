@@ -8,6 +8,6 @@ ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"; cd "$ROOT"
 source .venv/bin/activate
 export OMP_NUM_THREADS=1
 export KMP_DUPLICATE_LIB_OK=TRUE
-EXP="${1:-elon_test}"
+EXP="${1:-voicefile}"
 echo "Building faiss index for experiment: $EXP  (single-threaded, no web UI)"
 python build_index.py "$EXP"

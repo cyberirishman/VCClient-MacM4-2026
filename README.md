@@ -1,4 +1,4 @@
-# Real-Time Voice Clone (RVC) — Apple Silicon (M4)
+# VCClient-MacM4-2026 — Real-Time Voice Clone (RVC) for Apple Silicon
 
 Turn your live microphone into **someone else's voice in real time** on an Apple
 Silicon Mac. You speak; your students hear the target voice, low-latency enough
@@ -25,8 +25,8 @@ installs don't fight each other.
 ## Quick start
 
 ```bash
-git clone <your-repo-url> VCClient   # or just use this folder
-cd VCClient
+git clone https://github.com/CyberIrishman/VCClient-MacM4-2026.git
+cd VCClient-MacM4-2026
 ./setup.sh                            # one command: deps, venv, models (~15-20 min)
 ```
 
@@ -53,6 +53,67 @@ Then:
 8. Downloads RVC base models (hubert / rmvpe / pretrained).
 9. Writes `locked-requirements.txt` (exact frozen versions) for reproducibility.
 
+## What a "model", `.pth`, and `.index` actually are
+
+New to voice cloning? Here's how the pieces fit together, in plain terms.
+
+**Training** is teaching the software what your target voice sounds like. You give
+it a few minutes of that person speaking, and over many repetitions (called
+*epochs*) it gradually learns the voice's unique characteristics — its tone,
+timbre, and pitch patterns. Training is a one-time cost: once it finishes, you have
+a reusable **model**.
+
+**The model = the `.pth` file.** `.pth` is simply PyTorch's format for a saved
+neural network, and this one file *is* the trained voice. Everything the software
+learned gets packed into `assets/weights/voicefile.pth`. This is what you load to
+convert speech: feed in your own voice, and the model reshapes it to sound like the
+target. Copy this file to another machine and you have the voice there too — it's
+the real deliverable.
+
+**Feature extraction and the `.index` file** are a separate, *optional* quality
+booster. Before training, the software chops your audio into tiny slices and
+computes a numeric "fingerprint" for each one — that's *feature extraction*. The
+**`.index`** is a fast, searchable library of all those fingerprints. During
+conversion the model can consult it to find the closest real examples from your
+training audio and lean toward them, which makes the output cling more tightly to
+the target's actual sound.
+
+A simple analogy: the **`.pth` is the artist** who paints in the target's style,
+and the **`.index` is a reference photo album** the artist glances at to stay
+accurate.
+
+**The relationship that matters:** the `.pth` is **required** — it does the
+conversion. The `.index` is **optional** — it only refines it. You can run the
+voice changer with the model alone (this project does exactly that, because the
+index destabilizes real-time on Apple Silicon — see the tuning note later). With
+both you get the sharpest clone; with just the `.pth` you still get a convincing
+one.
+
+## Where the models live — and using multiple voices
+
+Everything a trained voice needs is stored **inside the upstream checkout**, keyed
+by the **experiment name** you type on the Train tab:
+
+- **Voice model:** `RVC-WebUI-MacOS/assets/weights/<name>.pth` — one `.pth` per voice.
+- **Its index + training data:** `RVC-WebUI-MacOS/logs/<name>/` — holds the `.index`
+  and the training checkpoints for that voice.
+
+**Yes, you can train as many voices as you want** — just give each a different name,
+and the name keeps them in separate files and folders so they never collide:
+
+| Train with name | Model file | Index folder |
+|---|---|---|
+| `alice` | `assets/weights/alice.pth` | `logs/alice/…added_….index` |
+| `bob`   | `assets/weights/bob.pth`   | `logs/bob/…added_….index`   |
+
+To **switch voices at runtime**, just load the `.pth` (and its matching `.index`)
+you want in the real-time GUI's **Load model** fields — no reinstall, no retraining.
+Build each voice's index with `./build-index.sh <name>`.
+
+> If you turned on "save small model at every checkpoint," you'll also see files like
+> `<name>_e40_s1200.pth` in `assets/weights/` — those are snapshots of the **same**
+> voice at different epochs, not separate voices. The plain `<name>.pth` is the final one.
+
 ## Training the voice (once, ~15–30 min on M4)
 
 1. Drop a **clean, dry, single-speaker** 2–3 min WAV in `training_audio/`.
@@ -66,10 +127,10 @@ Then:
    file. Just keep them the **same speaker** and, ideally, similar mic/room, and
    make sure each clip is individually clean (no music/reverb).
 2. `./run-webui.sh` → **Train** tab.
-   - Experiment name: e.g. `targetvoice`; sample rate `48k` (or `40k` if slow).
+   - Experiment name: e.g. `voicefile`; sample rate `48k` (or `40k` if slow).
    - Point it at `training_audio/`; pitch method **rmvpe**.
-   - Process data → Feature extraction → Train (≈150–300 epochs) → Train index.
-3. Output: `assets/weights/targetvoice.pth` + an `.index` under `logs/targetvoice/`.
+   - Process data → Feature extraction → Train (≈150–300 epochs) — then **skip the UI's "Train feature index" button** (it segfaults on Apple Silicon); build the index with `./build-index.sh` instead (see the next section).
+3. Output: `assets/weights/voicefile.pth` — your trained model. You create the `.index` in the next step with `./build-index.sh`.
 
 **Timing on M4 (measured): ~100 s/epoch** for ~4 min of audio. So 200 epochs ≈ 5.5 h
 (train overnight), 100 epochs ≈ 2.8 h. To audition as it trains and stop early, set
@@ -86,7 +147,7 @@ The web UI's "Train feature index" button often **segfaults on Apple Silicon**
 training, with nothing else running:
 
 ```bash
-./build-index.sh            # defaults to experiment name "elon_test"
+./build-index.sh            # defaults to experiment name "voicefile"
 ./build-index.sh myexp      # or pass a different experiment name
 ```
 
@@ -97,11 +158,11 @@ It prints the path to the `added_*.index` file it creates under
 
 `./run-realtime.sh`, then in the GUI:
 
-- Load `targetvoice.pth` + its `.index`.
+- Load `voicefile.pth` + its `.index`.
 - Input = your mic. Output = room speakers (in-person) **or** BlackHole for
   Zoom/screen-share (`brew install blackhole-2ch`).
 - **Latency knob:** start Block time ≈ 0.25 s, small crossfade (~0.05 s). Lower
-  for less delay, raise if it stutters. Index rate ~0.5–0.75 for realism.
+  for less delay, raise if it stutters. **Index rate: leave at `0`** on Apple Silicon — index retrieval deadlocks real-time (see the limitation note below); the trained model alone is already a convincing clone.
 - Nudge pitch/transpose a few semitones if your natural pitch is far from target.
 
 ## Audio routing

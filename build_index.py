@@ -2,7 +2,7 @@
 """Standalone faiss index builder for RVC (Apple Silicon safe).
 Mirrors RVC's "Train feature index" but runs single-threaded to avoid the
 faiss/OpenMP segfault seen inside the web UI on macOS arm64.
-Usage: python build_index.py [experiment_name]   (default: elon_test)
+Usage: python build_index.py [experiment_name]   (default: voicefile)
 """
 import os, sys, glob, traceback
 os.environ.setdefault("OMP_NUM_THREADS", "1")
@@ -12,7 +12,7 @@ import faiss
 
 
 def main():
-    exp = sys.argv[1] if len(sys.argv) > 1 else "elon_test"
+    exp = sys.argv[1] if len(sys.argv) > 1 else "voicefile"
     root = os.path.dirname(os.path.abspath(__file__))
     exp_dir = os.path.join(root, "RVC-WebUI-MacOS", "logs", exp)
     feat_dir = os.path.join(exp_dir, "3_feature768")
