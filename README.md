@@ -70,8 +70,8 @@ convert speech: feed in your own voice, and the model reshapes it to sound like 
 target. Copy this file to another machine and you have the voice there too — it's
 the real deliverable.
 
-**Feature extraction and the `.index` file** are a separate, *optional* quality
-booster. Before training, the software chops your audio into tiny slices and
+**Feature extraction and the `.index` file** are a separate quality *refinement*
+(and a file this GUI requires you to select — see below). Before training, the software chops your audio into tiny slices and
 computes a numeric "fingerprint" for each one — that's *feature extraction*. The
 **`.index`** is a fast, searchable library of all those fingerprints. During
 conversion the model can consult it to find the closest real examples from your
@@ -82,12 +82,7 @@ A simple analogy: the **`.pth` is the artist** who paints in the target's style,
 and the **`.index` is a reference photo album** the artist glances at to stay
 accurate.
 
-**The relationship that matters:** the `.pth` is **required** — it does the
-conversion. The `.index` is **optional** — it only refines it. You can run the
-voice changer with the model alone (this project does exactly that, because the
-index destabilizes real-time on Apple Silicon — see the tuning note later). With
-both you get the sharpest clone; with just the `.pth` you still get a convincing
-one.
+**The relationship that matters:** the `.pth` is **required** — it does the actual conversion. The `.index` only *refines* it. Conceptually the model can convert on its own — but in practice this real-time GUI won't start unless you also *select* an index file, so you always build one (Stage 2 below). On Apple Silicon you select it but keep **Index Rate at 0**: it stays loaded-but-inactive, the refinement is off (which avoids a deadlock), and the model alone is already a convincing clone.
 
 ## Where the models live — and using multiple voices
 
@@ -97,6 +92,10 @@ by the **experiment name** you type on the Train tab:
 - **Voice model:** `RVC-WebUI-MacOS/assets/weights/<name>.pth` — one `.pth` per voice.
 - **Its index + training data:** `RVC-WebUI-MacOS/logs/<name>/` — holds the `.index`
   and the training checkpoints for that voice.
+
+> **Full path on your Mac:** if you cloned into your home folder, these live under
+> `/Users/YOUR_USERNAME/VCClient-MacM4-2026/` — e.g. the model is
+> `/Users/YOUR_USERNAME/VCClient-MacM4-2026/RVC-WebUI-MacOS/assets/weights/<name>.pth`.
 
 **Yes, you can train as many voices as you want** — just give each a different name,
 and the name keeps them in separate files and folders so they never collide:
@@ -122,16 +121,17 @@ genuinely different steps — keeping them straight avoids all the confusion:
 | Stage | What it does | You run | Produces | Required? |
 |---|---|---|---|---|
 | **1. Train** | Learns your target voice (long, GPU-heavy) | `./run-webui.sh` | `voicefile.pth` — the model | **Yes** |
-| **2. Build index** | Makes a lookup file from the same audio | `./build-index.sh` | an `…added_….index` file | Optional |
+| **2. Build index** | Makes the index file the GUI needs to start | `./build-index.sh` | an `…added_….index` file | **Yes** |
 | **3. Run live** | Converts your mic to the voice in real time | `./run-realtime.sh` | live converted audio | **Yes** |
 
 **Is "build index" just part 2 of training? No.** Training (Stage 1) is what
 creates the voice — the `.pth` model. Building the index (Stage 2) does **not**
-train or improve the model; it's a separate, optional lookup table that the
-real-time engine *can* consult to match the target a little more tightly. On Apple
-Silicon the index is **turned off at runtime anyway** (it deadlocks — see the
-limitation note near the end), so for this project Stage 2 is optional and the
-model from Stage 1 is what you actually use.
+train or improve the model; it's a separate lookup table. But you still **must**
+build it, because the real-time GUI refuses to start unless an index file is
+selected (it pops up *"please select an index file"*). The trick on Apple Silicon
+is to select that index but keep **Index Rate at 0**: the file is loaded but never
+actually searched — which satisfies the GUI while avoiding the deadlock that active
+index retrieval causes (see the limitation note near the end).
 
 ## Stage 1 — Train the voice model → `voicefile.pth`
 
@@ -162,12 +162,13 @@ every checkpoint" = Yes** with a small **Save frequency** (e.g. 10) — each
 checkpoint then appears in `assets/weights/` and is loadable on the Inference tab.
 Otherwise the final model is written only at the last epoch.
 
-## Stage 2 — Build the feature index → `.index`  *(optional)*
+## Stage 2 — Build the feature index → `.index`  *(required — the GUI won't start without it)*
 
-A separate, quick step that builds a lookup file from your training data. It is
-**not** more training and does not touch the model. On Apple Silicon it's optional
-because the real-time engine can't use it (deadlock) — build it only if you want
-it, or plan to use the model on another platform.
+A separate, quick step that builds the lookup file from your training data. It is
+**not** more training and does not touch the model — but you **must** build it,
+because the real-time GUI won't start unless an index file is selected. (You keep
+Index Rate at 0 in Stage 3, so the index is present but never actually searched —
+that's what avoids the deadlock.)
 
 Run it **after** Stage 1 finishes, with nothing else running:
 
@@ -181,22 +182,38 @@ Run it **after** Stage 1 finishes, with nothing else running:
 > single-threaded and safely.
 
 It prints the path to the `added_*.index` file it creates under
-`RVC-WebUI-MacOS/logs/<name>/` — that's the one you would load in Stage 3.
+`RVC-WebUI-MacOS/logs/<name>/` — that's the one you load in Stage 3.
 
 ## Stage 3 — Run it live (real-time voice change)
 
 Now use your trained model. Run `./run-realtime.sh`, then in the GUI:
 
-- **Load** `voicefile.pth` (and its `.index` too, only if you built one in Stage 2
-  and want it).
+- **Load both** `voicefile.pth` **and** its `added_*.index` — the GUI requires an
+  index file selected, or it pops up *"please select an index file"* and won't start.
+- **Index rate: leave at `0`** on Apple Silicon — this keeps the index loaded but
+  inactive (active retrieval deadlocks real-time; see the limitation note). The
+  model alone is already a convincing clone.
 - **Input** = your mic. **Output** = room speakers (in person), or **BlackHole**
   for Zoom/screen-share (see *Audio routing* below).
-- **Index rate: leave at `0`** on Apple Silicon — index retrieval deadlocks
-  real-time (see the limitation note), and the model alone is already convincing.
 - **Latency knob:** start Block time ≈ 0.25 s, small crossfade (~0.05 s); lower for
   less delay, raise if it stutters.
 - Nudge **pitch/transpose** a few semitones if your natural pitch is far from the
   target's.
+
+> **Where those two files are on disk** — the GUI's *Select the .pth file* and
+> *Select the .index file* buttons open a file browser, so you need to know where
+> to navigate. If you cloned into your home folder, they are:
+>
+> ```
+> Model:  /Users/YOUR_USERNAME/VCClient-MacM4-2026/RVC-WebUI-MacOS/assets/weights/voicefile.pth
+> Index:  /Users/YOUR_USERNAME/VCClient-MacM4-2026/RVC-WebUI-MacOS/logs/voicefile/added_IVF<N>_Flat_nprobe_1_voicefile_v2.index
+> ```
+>
+> Swap `YOUR_USERNAME` for your Mac account name and `voicefile` for your
+> experiment name. The `<N>` is a number `./build-index.sh` computes from your training data and prints when it
+> finishes. (The GUI runs from inside `RVC-WebUI-MacOS/`, so typing the shorter
+> relative paths `assets/weights/voicefile.pth` and
+> `logs/voicefile/added_IVF<N>_Flat_nprobe_1_voicefile_v2.index` works too.)
 
 ## Audio routing
 
@@ -279,7 +296,7 @@ Restore anytime: `uv pip install -r locked-requirements.txt`.
 | `fairseq` won't build | setup.sh auto-retries with `pip<24.1` + `--no-build-isolation`. |
 | `MPS available: False` | Wrong torch/x86 Python — `make clean` then `./setup.sh`. |
 | Real-time stutters | Raise Block time (~0.35 s); close heavy apps. |
-| Clone sounds mushy | Cleaner sample, more epochs, raise index rate. |
+| Clone sounds mushy | Use a cleaner training sample and train more epochs. (Don't raise Index Rate on Apple Silicon — it deadlocks; keep it at 0.) |
 | Delay too long | Lower Block time/crossfade; use a `40k` model. |
 | No sound in Zoom | Zoom mic = BlackHole 2ch; GUI output = BlackHole 2ch. |
 | `No module named 'pkg_resources'` | `uv pip install "setuptools<70" wheel` (now baked into setup.sh). |
@@ -290,7 +307,7 @@ Restore anytime: `uv pip install -r locked-requirements.txt`.
 | Training dies at epoch 1: `no attribute 'tostring_rgb'` | `uv pip install "matplotlib==3.7.5"` (pinned in requirements-extra.txt). |
 | `Segmentation fault: 11` on Train feature index | faiss/OpenMP crashes in the web UI on Apple Silicon. Use `./build-index.sh` instead — single-threaded, no web UI. |
 | Real-time: `iteration over a 0-d tensor` (SOLA) | macOS bug in gui_v1.py — `torch.max(...)` needs `dim=0`. Fixed by setup.sh step 4c. |
-| `Index search FAILED or disabled` | Set **Index rate > 0** and load the **added_**`*.index` (not `trained_`). |
+| `Index search FAILED or disabled` | **Expected** on Apple Silicon — you keep Index Rate at 0, so the index is loaded but not searched. Not an error. (Raising the rate to actually use it deadlocks real-time.) |
 
 ## Responsible use
 
