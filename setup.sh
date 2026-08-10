@@ -159,4 +159,8 @@ say "DONE. Next steps:
   1) Put a clean 2-3 min WAV of the target voice in:  training_audio/
   2) Train:      ./run-webui.sh     (open http://127.0.0.1:7865  -> Train tab)
   3) Go live:    ./run-realtime.sh  (load your .pth + .index, tune Block time)
+
+The run-*.sh scripts activate the Python venv automatically — you do NOT need to
+activate it yourself. (Only run 'source .venv/bin/activate' to use raw python/uv.)
+
 Restore this exact env anytime with:  uv pip install -r locked-requirements.txt"

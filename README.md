@@ -44,6 +44,11 @@ Then:
 `./run-realtime.sh` starts the live voice changer, where you load your `.pth` +
 `.index` and speak.
 
+> **No need to activate the Python environment yourself** — `run-webui.sh`,
+> `run-realtime.sh`, and `build-index.sh` each activate `.venv` automatically.
+> (Only run `source .venv/bin/activate` if you want to use raw `python`/`uv`
+> commands directly.)
+
 (`make setup` / `make webui` / `make realtime` do the same thing.)
 
 ## What `setup.sh` does
@@ -142,32 +147,59 @@ index retrieval causes (see the limitation note near the end).
 
 ## Stage 1 — Train the voice model → `voicefile.pth`
 
-The long, one-time step that learns the voice.
+The long, one-time step that learns the voice. Do the sub-steps **in order**, and
+**let each finish before starting the next** — they are separate operations.
 
-1. Drop a **clean, dry, single-speaker** 2–3 min WAV into `training_audio/`.
-   No music, no reverb, consistent mic — this matters more than any setting.
+**1. Add your audio.** Drop a **clean, dry, single-speaker** 2–5 min WAV into
+`training_audio/`. No music, no reverb, consistent mic — this matters more than any
+setting.
 
-   **Several short clips work as well as one long file — no stitching needed.**
-   RVC points at the *folder* and slices every audio file inside into short
-   segments, pooling them into one training set. So three ~1-minute WAVs
-   (`clip1.wav`, `clip2.wav`, `clip3.wav`) behave like a single 3-minute file —
-   just keep them the **same speaker**, similar mic/room, and each one clean.
-2. Run `./run-webui.sh`, open <http://127.0.0.1:7865>, and use the **Train** tab:
-   - Experiment name: e.g. `voicefile`; sample rate `48k` (or `40k` if slow).
-   - Point it at `training_audio/`; pitch method **rmvpe**.
-   - Click **Process data → Feature extraction → Train** (≈150–300 epochs).
-   - **Do NOT click the UI's "Train feature index" button** — it segfaults on
-     Apple Silicon. That is Stage 2, which you run separately (below).
-3. **Output:** `assets/weights/voicefile.pth` — your trained model. That single
-   file is the entire result of Stage 1.
+> **Several short clips work as well as one long file — no stitching needed.** RVC
+> points at the *folder* and slices every file inside into short segments, pooling
+> them into one set. Three ~1-minute WAVs behave like a single 3-minute file — just
+> keep them the **same speaker**, similar mic/room, and each one clean.
+
+**2. Launch the web UI, then open it in a browser.** Run `./run-webui.sh` and
+**wait ~60 seconds** — the server takes about a minute to start. When the terminal
+prints `Running on local URL: http://0.0.0.0:7865`, open a browser **yourself** to
+<http://127.0.0.1:7865> (it does **not** open automatically). Click the **Train** tab.
+
+**3. Fill in the settings** at the top of the Train tab:
+
+- **Experiment name:** e.g. `voicefile`
+- **Target sample rate:** `48k` (or `40k` if slow) — **Version:** `v2`
+- **Dataset / training folder path:** the **full absolute path**, e.g.
+  `/Users/YOUR_USERNAME/VCClient-MacM4-2026/training_audio`. A bare `training_audio/`
+  or a `~/...` path will **not** resolve (the web UI runs from inside
+  `RVC-WebUI-MacOS/` and does not expand `~`).
+- **Pitch extraction algorithm:** `rmvpe`
+
+**4. Click the buttons ONE AT A TIME — wait for each to finish before the next.**
+The **Output information** box (right side of the Train tab) shows progress; wait
+for the completion message before moving on:
+
+1. Click **Process data**. Wait until Output information shows the success /
+   `end preprocess` message.
+2. Click **Feature extraction**. Wait until Output information shows
+   **`all-feature-done`**.
+3. Set **Save frequency = 25** and **Total training epochs = 200**, then click
+   **Train model**. This is the long one — **hours** on an M4 (~100 s/epoch, so
+   roughly 4–5.5 h for 200 epochs). It is done when the log reports training
+   finished (`saving final ckpt: Success`).
+
+> ⚠️ **Do NOT click the UI's "Train feature index" button** — it segfaults on Apple
+> Silicon. Building the index is **Stage 2**, done separately with `./build-index.sh`
+> (seconds to minutes).
+
+**5. Output:** `assets/weights/voicefile.pth` — your trained model. That single file
+is the entire result of Stage 1.
 
 **Timing & tips (measured on M4):** ~100 s/epoch for ~4 min of audio → 200 epochs
-≈ 5.5 h (train overnight), 100 epochs ≈ 2.8 h. Voices are usually recognizable by
-~epoch 40–80. Keep the Mac awake during long runs with `caffeinate -i` in a
-separate terminal. To audition partway and stop early, set **"save small model at
-every checkpoint" = Yes** with a small **Save frequency** (e.g. 10) — each
-checkpoint then appears in `assets/weights/` and is loadable on the Inference tab.
-Otherwise the final model is written only at the last epoch.
+≈ 4–5.5 h; keep the Mac awake with `caffeinate -i` in a separate terminal. Voices
+are usually recognizable by ~epoch 40–80. To audition partway and stop early, set
+**"save small model at every checkpoint" = Yes** and use a smaller **Save frequency**
+(e.g. 10) — each checkpoint then appears in `assets/weights/` and is loadable on the
+Inference tab. Otherwise the final model is written only at the last epoch.
 
 ## Stage 2 — Build the feature index → `.index`  *(required — the GUI won't start without it)*
 
