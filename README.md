@@ -221,12 +221,11 @@ that's what avoids the deadlock.)
 Run it **after** Stage 1 finishes, with nothing else running:
 
 ```bash
-./build-index.sh
-./build-index.sh myvoice
+./build-index.sh voicefile
 ```
 
-With no argument it uses the experiment name `voicefile`; pass a different name
-(like `myvoice` above) if you trained under another name.
+Replace `voicefile` with your own experiment name if you trained under a
+different one — it must match the name you used in Stage 1.
 
 > **Why not the UI button?** The web UI's "Train feature index" button segfaults
 > on Apple Silicon (faiss + OpenMP). `./build-index.sh` does the same job
