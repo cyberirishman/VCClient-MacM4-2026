@@ -35,7 +35,8 @@ base models — in one pass (~15–20 minutes).
 
 This voice changer needs two types of voice files     
 The voice model file (.pth) and  and the index (.index file)    
-You can find these on sites such as Github and go straight to Step 3, or train your own voice models  
+You can find these on sites such as Github and go straight to Step 3, or train your own voice models 
+e.g https://huggingface.co/anonymous12345678910/ElonMuskV2   
 
 **To train a voice** — launch the web UI - the training interface is launched in a browser:  
 
