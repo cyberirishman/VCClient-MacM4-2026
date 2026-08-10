@@ -27,15 +27,22 @@ installs don't fight each other.
 ```bash
 git clone https://github.com/CyberIrishman/VCClient-MacM4-2026.git
 cd VCClient-MacM4-2026
-./setup.sh                            # one command: deps, venv, models (~15-20 min)
+./setup.sh
 ```
+
+`./setup.sh` installs everything — dependencies, the Python 3.10 venv, and the
+base models — in one pass (~15–20 minutes).
 
 Then:
 
 ```bash
-./run-webui.sh        # 1) TRAIN — opens http://127.0.0.1:7865  (Train tab)
-./run-realtime.sh     # 2) GO LIVE — load your .pth + .index, speak
+./run-webui.sh
+./run-realtime.sh
 ```
+
+`./run-webui.sh` opens the training UI at <http://127.0.0.1:7865> (Train tab);
+`./run-realtime.sh` starts the live voice changer, where you load your `.pth` +
+`.index` and speak.
 
 (`make setup` / `make webui` / `make realtime` do the same thing.)
 
@@ -173,9 +180,12 @@ that's what avoids the deadlock.)
 Run it **after** Stage 1 finishes, with nothing else running:
 
 ```bash
-./build-index.sh            # uses experiment name "voicefile"
-./build-index.sh myvoice    # or pass a different experiment name
+./build-index.sh
+./build-index.sh myvoice
 ```
+
+With no argument it uses the experiment name `voicefile`; pass a different name
+(like `myvoice` above) if you trained under another name.
 
 > **Why not the UI button?** The web UI's "Train feature index" button segfaults
 > on Apple Silicon (faiss + OpenMP). `./build-index.sh` does the same job
@@ -295,12 +305,14 @@ Done experimenting? `cleanup.sh` reclaims the disk space (the base models + venv
 are several GB) or removes the project entirely:
 
 ```bash
-./cleanup.sh          # RESET: delete .venv + RVC-WebUI-MacOS/ (base models,
-                      #        trained voices, caches) but KEEP the repo, so you
-                      #        can re-run ./setup.sh later
-./cleanup.sh --all    # FULL:  delete the entire project folder, source and all
-./cleanup.sh -h       # help
+./cleanup.sh
+./cleanup.sh --all
+./cleanup.sh -h
 ```
+
+`./cleanup.sh` **resets** — deletes `.venv` and `RVC-WebUI-MacOS/` (base models and
+trained voices) but keeps the repo so you can re-run `./setup.sh`. `./cleanup.sh --all`
+**fully removes** the whole project folder. `./cleanup.sh -h` shows help.
 
 It lists what it will delete and asks you to type `yes` first (add `-y` to skip the
 prompt). It does **not** touch Homebrew packages, `uv`, or the uv-managed Python
