@@ -43,7 +43,7 @@ e.g https://huggingface.co/anonymous12345678910/ElonMuskV2
 ```bash
 ./run-webui.sh
 ```
-[WebUI](https://github.com/cyberirishman/VCClient-MacM4-2026/blob/59556d729a26f5ac0916a90eaffc117d2dd69125/RVC-WebUI2.png)
+![WebUI](https://github.com/cyberirishman/VCClient-MacM4-2026/blob/59556d729a26f5ac0916a90eaffc117d2dd69125/RVC-WebUI2.png)
 Open the training web UI in a browser at <http://127.0.0.1:7865> (Train tab). Use it to train
 your voice model (.pkt file **Stage 1** below), then build its index (.index file **Stage 2**). It takes
 ~60 seconds to start — open the URL in a browser yourself once it's up.
