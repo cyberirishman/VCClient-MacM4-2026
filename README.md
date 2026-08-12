@@ -54,7 +54,7 @@ go live with the integrated control panel :
 ```bash
 ./run-realtime.sh
 ```
-![GUI](https://github.com/cyberirishman/VCClient-MacM4-2026/blob/78fc0b2b06ed5ef4f1a3d0f1e2dfea3e726d6c2e/updatedgui.png)
+![GUI](https://github.com/cyberirishman/VCClient-MacM4-2026/blob/96a09331a9a1bc6f333c976bd3fe91b706c78ee2/updatedgui.png)  
 Launches the real-time voice changer, where you load your `.pth` + `.index` and
 speak. Running this before you have trained a model **won't work** — there's
 nothing to load yet.
